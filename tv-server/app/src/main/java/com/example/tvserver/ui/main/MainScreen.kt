@@ -113,7 +113,7 @@ fun MainScreen(
                     Text(
                         text = "[ REAL-TIME INPUT ROLLING SCOPE (TOP: X / BOT: Y) ]",
                         style = AppTheme.typography.caption.copy(
-                            color = Color(0xFF2E7D32),
+                            color = AppTheme.colors.foreground,
                             fontWeight = FontWeight.Bold,
                             fontSize = 10.sp
                         )
@@ -122,17 +122,20 @@ fun MainScreen(
                         modifier = Modifier
                             .size(6.dp)
                             .clip(RoundedCornerShape(3.dp))
-                            .background(if (packetCount > 0) Color(0xFF2E7D32) else Color(0xFFD32F2F))
+                            .background(if (packetCount > 0) AppTheme.colors.primary else AppTheme.colors.mutedForeground)
                     )
                 }
 
-                // Visual Oscilloscope Canvas
+                // Visual Oscilloscope Canvas — capture colors before entering draw scope
+                val scopeBorderColor = AppTheme.colors.border
+                val scopeFgColor = AppTheme.colors.foreground
+                val scopeMutedColor = AppTheme.colors.mutedForeground
                 Canvas(
                     modifier = Modifier
                         .fillMaxWidth()
                         .weight(1f)
-                        .background(Color(0x05000000))
-                        .border(1.dp, Color(0x10000000), RoundedCornerShape(4.dp))
+                        .background(AppTheme.colors.background)
+                        .border(1.dp, AppTheme.colors.border, RoundedCornerShape(4.dp))
                 ) {
                     val w = size.width
                     val h = size.height
@@ -142,22 +145,22 @@ fun MainScreen(
 
                     // Draw center and baseline grid lines
                     drawLine(
-                        color = Color(0x202E7D32),
+                        color = scopeBorderColor.copy(alpha = 0.2f),
                         start = Offset(0f, baseX),
                         end = Offset(w, baseX),
-                        strokeWidth = 1.5.dp.toPx()
+                        strokeWidth = 1.dp.toPx()
                     )
                     drawLine(
-                        color = Color(0x202E7D32),
+                        color = scopeBorderColor.copy(alpha = 0.2f),
                         start = Offset(0f, baseY),
                         end = Offset(w, baseY),
-                        strokeWidth = 1.5.dp.toPx()
+                        strokeWidth = 1.dp.toPx()
                     )
                     drawLine(
-                        color = Color(0x40000000),
+                        color = scopeBorderColor.copy(alpha = 0.4f),
                         start = Offset(0f, halfH),
                         end = Offset(w, halfH),
-                        strokeWidth = 2.dp.toPx()
+                        strokeWidth = 1.5.dp.toPx()
                     )
 
                     // Draw vertical grids
@@ -165,10 +168,10 @@ fun MainScreen(
                     for (i in 1 until divisions) {
                         val xPos = w * (i.toFloat() / divisions)
                         drawLine(
-                            color = Color(0x10000000),
+                            color = scopeBorderColor.copy(alpha = 0.1f),
                             start = Offset(xPos, 0f),
                             end = Offset(xPos, h),
-                            strokeWidth = 1.dp.toPx()
+                            strokeWidth = 0.8.dp.toPx()
                         )
                     }
 
@@ -186,15 +189,15 @@ fun MainScreen(
 
                             val alpha = (idx.toFloat() / points.size) * 0.8f
                             drawCircle(
-                                color = Color(0xFF2E7D32).copy(alpha = alpha),
-                                radius = 2.dp.toPx(),
+                                color = scopeFgColor.copy(alpha = alpha),
+                                radius = 1.5.dp.toPx(),
                                 center = Offset(endX, endY)
                             )
                             drawLine(
-                                color = Color(0xFF2E7D32).copy(alpha = alpha),
+                                color = scopeFgColor.copy(alpha = alpha),
                                 start = Offset(startX, startY.coerceIn(0f, halfH)),
                                 end = Offset(endX, endY.coerceIn(0f, halfH)),
-                                strokeWidth = 2.dp.toPx()
+                                strokeWidth = 1.5.dp.toPx()
                             )
                         }
                     }
@@ -213,15 +216,15 @@ fun MainScreen(
 
                             val alpha = (idx.toFloat() / points.size) * 0.8f
                             drawCircle(
-                                color = Color(0xFF1565C0).copy(alpha = alpha),
-                                radius = 2.dp.toPx(),
+                                color = scopeMutedColor.copy(alpha = alpha),
+                                radius = 1.5.dp.toPx(),
                                 center = Offset(endX, endY)
                             )
                             drawLine(
-                                color = Color(0xFF1565C0).copy(alpha = alpha),
+                                color = scopeMutedColor.copy(alpha = alpha),
                                 start = Offset(startX, startY.coerceIn(halfH, h)),
                                 end = Offset(endX, endY.coerceIn(halfH, h)),
-                                strokeWidth = 2.dp.toPx()
+                                strokeWidth = 1.5.dp.toPx()
                             )
                         }
                     }
@@ -291,7 +294,7 @@ fun MainScreen(
                             )
                         )
                         val serverStatusText = if (isServerRunning) "RUNNING" else "STOPPED"
-                        val serverStatusColor = if (isServerRunning) Color(0xFF2E7D32) else Color(0xFFD32F2F)
+                        val serverStatusColor = if (isServerRunning) AppTheme.colors.foreground else AppTheme.colors.mutedForeground
                         Text(
                             text = serverStatusText,
                             style = AppTheme.typography.body.copy(
@@ -378,11 +381,26 @@ fun MainScreen(
                                     interactionSource = accessInteractionSource,
                                     indication = null,
                                     onClick = {
+                                    try {
                                         val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).apply {
                                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                                         }
                                         context.startActivity(intent)
+                                    } catch (e: Exception) {
+                                        try {
+                                            val intent = Intent(Settings.ACTION_SETTINGS).apply {
+                                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                            }
+                                            context.startActivity(intent)
+                                        } catch (e2: Exception) {
+                                            android.widget.Toast.makeText(
+                                                context,
+                                                "Could not open Settings. Please open them manually via TV Settings -> System -> Accessibility.",
+                                                android.widget.Toast.LENGTH_LONG
+                                            ).show()
+                                        }
                                     }
+                                }
                                 )
                                 .padding(vertical = 10.dp)
                         ) {

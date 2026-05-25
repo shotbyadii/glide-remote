@@ -25,6 +25,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -348,7 +349,7 @@ fun MainScreen(
                                 .clip(RoundedCornerShape(24.dp))
                                 .background(AppTheme.colors.background)
                                 .border(1.dp, AppTheme.colors.border, RoundedCornerShape(24.dp))
-                                .cyberGrid()
+                                .cyberGrid(AppTheme.colors.border.copy(alpha = 0.3f))
                                 .pointerInput(Unit) {
                                     detectTapGestures(
                                         onTap = {
@@ -433,8 +434,7 @@ fun MainScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
-                            .padding(16.dp)
-                            .verticalScroll(rememberScrollState()),
+                            .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
                         // Air Mouse Main Toggle Button
@@ -450,189 +450,279 @@ fun MainScreen(
                                 }
                             },
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = if (isAirMouseToggled) Color(0xFF10B981) else Color(0xFFEF4444)
+                                containerColor = if (isAirMouseToggled) AppTheme.colors.primary else AppTheme.colors.card
                             ),
-                            modifier = Modifier.fillMaxWidth().height(56.dp),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(56.dp)
+                                .border(1.dp, AppTheme.colors.border, RoundedCornerShape(16.dp)),
                             shape = RoundedCornerShape(16.dp)
                         ) {
                             Text(
                                 text = if (isAirMouseToggled) "AIR MOUSE: ACTIVE" else "AIR MOUSE: INACTIVE",
                                 fontWeight = FontWeight.Bold,
-                                fontSize = 16.sp,
-                                color = Color.White
+                                fontSize = 15.sp,
+                                color = if (isAirMouseToggled) AppTheme.colors.primaryForeground else AppTheme.colors.foreground,
+                                fontFamily = FontFamily.Monospace
                             )
                         }
 
                         Spacer(modifier = Modifier.height(16.dp))
 
-                        // Clutch hold area
-                        Box(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(160.dp)
-                                .clip(RoundedCornerShape(20.dp))
-                                .background(AppTheme.colors.card)
-                                .border(1.dp, AppTheme.colors.border, RoundedCornerShape(20.dp))
-                                .pointerInput(Unit) {
-                                    detectTapGestures(
-                                        onPress = {
-                                            sensorEngine.isAimingActive = true
-                                            HapticManager.performTapHaptic(context)
-                                            try {
-                                                awaitRelease()
-                                            } finally {
-                                                sensorEngine.isAimingActive = isAirMouseToggled
-                                                HapticManager.performHoverHaptic(context)
-                                            }
-                                        }
-                                    )
-                                },
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = "CLUTCH AREA\nPress and hold to engage gyro",
-                                color = AppTheme.colors.primary,
-                                fontSize = 14.sp,
-                                fontWeight = FontWeight.Bold,
-                                textAlign = TextAlign.Center
-                            )
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Reset / Profile Actions
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceEvenly
-                        ) {
-                            Button(
-                                onClick = {
-                                    HapticManager.performTapHaptic(context)
-                                    sensorEngine.resetCalibration()
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.card),
+                        if (isAirMouseToggled) {
+                            // Air Mouse is ACTIVE -> Clutch pad expands to fill the entire remaining vertical space!
+                            Box(
                                 modifier = Modifier
                                     .weight(1f)
-                                    .padding(horizontal = 4.dp)
-                                    .border(1.dp, AppTheme.colors.border, RoundedCornerShape(20.dp))
-                            ) {
-                                Text("Recalibrate", color = AppTheme.colors.foreground)
-                            }
-
-                            Button(
-                                onClick = {
-                                    HapticManager.performTapHaptic(context)
-                                    showProfilePicker = true
-                                },
-                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.card),
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .padding(horizontal = 4.dp)
-                                    .border(1.dp, AppTheme.colors.border, RoundedCornerShape(20.dp))
-                            ) {
-                                Text("Profiles", color = AppTheme.colors.foreground)
-                            }
-                        }
-
-                        Spacer(modifier = Modifier.height(16.dp))
-
-                        // Advanced Gyro physics parameters
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .clip(RoundedCornerShape(12.dp))
-                                .background(AppTheme.colors.card)
-                                .border(1.dp, AppTheme.colors.border, RoundedCornerShape(12.dp))
-                                .clickable {
-                                    HapticManager.performTapHaptic(context)
-                                    isGyroAdvancedExpanded = !isGyroAdvancedExpanded
-                                }
-                                .padding(12.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                text = "Advanced Physics Profiles",
-                                color = AppTheme.colors.foreground,
-                                fontWeight = FontWeight.Bold,
-                                fontSize = 14.sp
-                            )
-                            Text(
-                                text = if (isGyroAdvancedExpanded) "Collapse ▲" else "Expand ▼",
-                                color = AppTheme.colors.primary,
-                                fontSize = 12.sp
-                            )
-                        }
-
-                        if (isGyroAdvancedExpanded) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Card(
-                                colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card),
-                                modifier = Modifier
                                     .fillMaxWidth()
-                                    .border(1.dp, AppTheme.colors.border, RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(24.dp))
+                                    .background(
+                                        brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                            colors = listOf(AppTheme.colors.card, AppTheme.colors.background)
+                                        )
+                                    )
+                                    .border(2.dp, AppTheme.colors.primary, RoundedCornerShape(24.dp))
+                                    .cyberGrid(AppTheme.colors.border.copy(alpha = 0.3f))
+                                    .pointerInput(Unit) {
+                                        // Tapping on the active clutch pad sends clicks!
+                                        detectTapGestures(
+                                            onTap = {
+                                                remoteClient.sendClick(true)
+                                                remoteClient.sendClick(false)
+                                                HapticManager.performTapHaptic(context)
+                                            }
+                                        )
+                                    },
+                                contentAlignment = Alignment.Center
                             ) {
-                                Column(modifier = Modifier.padding(16.dp)) {
-                                    // Sensitivity Slider
+                                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                     Text(
-                                        text = "Gyro Sensitivity: ${"%.1f".format(pointerSensitivity)}",
+                                        text = "TAP ANYWHERE TO CLICK",
                                         color = AppTheme.colors.foreground,
-                                        fontSize = 13.sp
+                                        fontSize = 18.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                        fontFamily = FontFamily.SansSerif,
+                                        letterSpacing = (-0.5).sp
                                     )
-                                    Slider(
-                                        value = pointerSensitivity,
-                                        onValueChange = {
-                                            pointerSensitivity = it
-                                            sensorEngine.sensitivityX = it
-                                            sensorEngine.sensitivityY = it
-                                            autoSave()
-                                        },
-                                        valueRange = 5.0f..100.0f
-                                    )
-
-                                    // Acceleration Slider
-                                    Text(
-                                        text = "Pointer Acceleration: ${"%.1f".format(pointerAcceleration)}",
-                                        color = AppTheme.colors.foreground,
-                                        fontSize = 13.sp
-                                    )
-                                    Slider(
-                                        value = pointerAcceleration,
-                                        onValueChange = {
-                                            pointerAcceleration = it
-                                            remoteClient.sendAcceleration(it)
-                                            autoSave()
-                                        },
-                                        valueRange = 0.0f..5.0f
-                                    )
-
-                                    // Friction / Momentum Slider
-                                    Text(
-                                        text = "Pointer Friction: ${"%.1f".format(pointerMomentum)}",
-                                        color = AppTheme.colors.foreground,
-                                        fontSize = 13.sp
-                                    )
-                                    Slider(
-                                        value = pointerMomentum,
-                                        onValueChange = {
-                                            pointerMomentum = it
-                                            remoteClient.sendFriction(it)
-                                            autoSave()
-                                        },
-                                        valueRange = 0.0f..5.0f
-                                    )
-
                                     Spacer(modifier = Modifier.height(8.dp))
+                                    Text(
+                                        text = "Wave phone to aim cursor • Click anywhere to select\nToggle off above to calibrate/settings",
+                                        color = AppTheme.colors.mutedForeground,
+                                        fontSize = 11.sp,
+                                        textAlign = TextAlign.Center,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+                            }
+                        } else {
+                            // Air Mouse is INACTIVE -> Regular controls & Clutch Area for press-and-hold aiming
+                            Column(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .fillMaxWidth()
+                                    .verticalScroll(rememberScrollState()),
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                // Clutch Area (Press and hold to engage gyro)
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .height(180.dp)
+                                        .clip(RoundedCornerShape(20.dp))
+                                        .background(
+                                            brush = androidx.compose.ui.graphics.Brush.verticalGradient(
+                                                colors = listOf(AppTheme.colors.card, AppTheme.colors.background)
+                                            )
+                                        )
+                                        .border(1.dp, AppTheme.colors.border, RoundedCornerShape(20.dp))
+                                        .pointerInput(Unit) {
+                                            detectTapGestures(
+                                                onPress = {
+                                                    // Start the sensor engine and set aiming active temporarily!
+                                                    sensorEngine.start()
+                                                    sensorEngine.isAimingActive = true
+                                                    HapticManager.performTapHaptic(context)
+                                                    try {
+                                                        awaitRelease()
+                                                    } finally {
+                                                        // Stop the sensor engine and set aiming active back to false!
+                                                        sensorEngine.stop()
+                                                        sensorEngine.isAimingActive = false
+                                                        HapticManager.performHoverHaptic(context)
+                                                    }
+                                                }
+                                            )
+                                        },
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = "HOLD TO STEER (CLUTCH)\nPress and hold to aim cursor temporarily",
+                                        color = AppTheme.colors.primary,
+                                        fontSize = 13.sp,
+                                        fontWeight = FontWeight.Bold,
+                                        textAlign = TextAlign.Center,
+                                        fontFamily = FontFamily.SansSerif
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Calibration & Profiles buttons
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceEvenly
+                                ) {
+                                    Button(
+                                        onClick = {
+                                            HapticManager.performTapHaptic(context)
+                                            sensorEngine.resetCalibration()
+                                        },
+                                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.card),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 4.dp)
+                                            .border(1.dp, AppTheme.colors.border, RoundedCornerShape(20.dp))
+                                    ) {
+                                        Text("Recalibrate", color = AppTheme.colors.foreground, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                                    }
 
                                     Button(
                                         onClick = {
                                             HapticManager.performTapHaptic(context)
-                                            showSaveDialog = true
+                                            showProfilePicker = true
                                         },
-                                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary),
-                                        modifier = Modifier.fillMaxWidth()
+                                        colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.card),
+                                        modifier = Modifier
+                                            .weight(1f)
+                                            .padding(horizontal = 4.dp)
+                                            .border(1.dp, AppTheme.colors.border, RoundedCornerShape(20.dp))
                                     ) {
-                                        Text("Save Custom Physics Profile", color = AppTheme.colors.foreground)
+                                        Text("Profiles", color = AppTheme.colors.foreground, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                                    }
+                                }
+
+                                Spacer(modifier = Modifier.height(16.dp))
+
+                                // Advanced slider card toggle
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .clip(RoundedCornerShape(12.dp))
+                                        .background(AppTheme.colors.card)
+                                        .border(1.dp, AppTheme.colors.border, RoundedCornerShape(12.dp))
+                                        .clickable {
+                                            HapticManager.performTapHaptic(context)
+                                            isGyroAdvancedExpanded = !isGyroAdvancedExpanded
+                                        }
+                                        .padding(12.dp),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Text(
+                                        text = "Advanced Physics Profiles",
+                                        color = AppTheme.colors.foreground,
+                                        fontWeight = FontWeight.Bold,
+                                        fontSize = 13.sp,
+                                        fontFamily = FontFamily.SansSerif
+                                    )
+                                    Text(
+                                        text = if (isGyroAdvancedExpanded) "Collapse ▲" else "Expand ▼",
+                                        color = AppTheme.colors.primary,
+                                        fontSize = 11.sp,
+                                        fontFamily = FontFamily.Monospace
+                                    )
+                                }
+
+                                if (isGyroAdvancedExpanded) {
+                                    Spacer(modifier = Modifier.height(12.dp))
+                                    Card(
+                                        colors = CardDefaults.cardColors(containerColor = AppTheme.colors.card),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .border(1.dp, AppTheme.colors.border, RoundedCornerShape(12.dp))
+                                    ) {
+                                        Column(modifier = Modifier.padding(16.dp)) {
+                                            // Sensitivity
+                                            Text(
+                                                text = "Gyro Sensitivity: ${"%.1f".format(pointerSensitivity)}",
+                                                color = AppTheme.colors.foreground,
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                            Slider(
+                                                value = pointerSensitivity,
+                                                onValueChange = {
+                                                    pointerSensitivity = it
+                                                    sensorEngine.sensitivityX = it
+                                                    sensorEngine.sensitivityY = it
+                                                    autoSave()
+                                                },
+                                                valueRange = 5.0f..100.0f,
+                                                colors = SliderDefaults.colors(
+                                                    thumbColor = AppTheme.colors.primary,
+                                                    activeTrackColor = AppTheme.colors.primary,
+                                                    inactiveTrackColor = AppTheme.colors.border
+                                                )
+                                            )
+
+                                            // Acceleration
+                                            Text(
+                                                text = "Pointer Acceleration: ${"%.1f".format(pointerAcceleration)}",
+                                                color = AppTheme.colors.foreground,
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                            Slider(
+                                                value = pointerAcceleration,
+                                                onValueChange = {
+                                                    pointerAcceleration = it
+                                                    remoteClient.sendAcceleration(it)
+                                                    autoSave()
+                                                },
+                                                valueRange = 0.0f..5.0f,
+                                                colors = SliderDefaults.colors(
+                                                    thumbColor = AppTheme.colors.primary,
+                                                    activeTrackColor = AppTheme.colors.primary,
+                                                    inactiveTrackColor = AppTheme.colors.border
+                                                )
+                                            )
+
+                                            // Friction
+                                            Text(
+                                                text = "Pointer Friction: ${"%.1f".format(pointerMomentum)}",
+                                                color = AppTheme.colors.foreground,
+                                                fontSize = 12.sp,
+                                                fontFamily = FontFamily.Monospace
+                                            )
+                                            Slider(
+                                                value = pointerMomentum,
+                                                onValueChange = {
+                                                    pointerMomentum = it
+                                                    remoteClient.sendFriction(it)
+                                                    autoSave()
+                                                },
+                                                valueRange = 0.0f..5.0f,
+                                                colors = SliderDefaults.colors(
+                                                    thumbColor = AppTheme.colors.primary,
+                                                    activeTrackColor = AppTheme.colors.primary,
+                                                    inactiveTrackColor = AppTheme.colors.border
+                                                )
+                                            )
+
+                                            Spacer(modifier = Modifier.height(8.dp))
+
+                                            Button(
+                                                onClick = {
+                                                    HapticManager.performTapHaptic(context)
+                                                    showSaveDialog = true
+                                                },
+                                                colors = ButtonDefaults.buttonColors(containerColor = AppTheme.colors.primary),
+                                                modifier = Modifier.fillMaxWidth()
+                                            ) {
+                                                Text("Save Custom Physics Profile", color = AppTheme.colors.primaryForeground, fontFamily = FontFamily.Monospace, fontSize = 12.sp)
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -996,21 +1086,20 @@ fun MainScreen(
 }
 
 // Custom Modifier extension to draw grid lines on precision touchpad
-fun Modifier.cyberGrid(): Modifier = drawBehind {
+fun Modifier.cyberGrid(color: Color): Modifier = drawBehind {
     val d = density
-    val gridSpacing = d * 24.0f
-    val strokeWidth = d * 1.0f
-    val gridColor = Color(0x0AFFFFFF) // Super subtle grid color
+    val gridSpacing = d * 20.0f
+    val strokeWidth = d * 0.8f
     val w = size.width
     val h = size.height
     var x = 0.0f
     while (x < w) {
-        drawLine(gridColor, Offset(x, 0.0f), Offset(x, h), strokeWidth)
+        drawLine(color, Offset(x, 0.0f), Offset(x, h), strokeWidth)
         x += gridSpacing
     }
     var y = 0.0f
     while (y < h) {
-        drawLine(gridColor, Offset(0.0f, y), Offset(w, y), strokeWidth)
+        drawLine(color, Offset(0.0f, y), Offset(w, y), strokeWidth)
         y += gridSpacing
     }
 }

@@ -9,24 +9,24 @@ import androidx.compose.ui.graphics.Color
 val LightColors = AppColors(
     background = StarkWhite,
     foreground = StarkBlack,
-    card = StarkWhite,
+    card = Color(0xFFF5F5F5),
     cardForeground = StarkBlack,
-    primary = Color(0xFF6200EE),
+    primary = StarkBlack,
     primaryForeground = StarkWhite,
-    border = SoftBorderLight,
-    mutedForeground = MutedTextLight,
+    border = Color(0xFFE5E5E5),
+    mutedForeground = Color(0xFF737373),
     isDark = false
 )
 
 val DarkColors = AppColors(
     background = PureBlack,
-    foreground = NearWhite,
-    card = DeepCardDark,
-    cardForeground = NearWhite,
-    primary = Color(0xFFBB86FC),
+    foreground = StarkWhite,
+    card = Color(0xFF0C0C0C),
+    cardForeground = StarkWhite,
+    primary = StarkWhite,
     primaryForeground = PureBlack,
-    border = CharcoalBorderDark,
-    mutedForeground = MutedTextDark,
+    border = Color(0xFF222222),
+    mutedForeground = Color(0xFF888888),
     isDark = true
 )
 
