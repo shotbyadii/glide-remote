@@ -1,0 +1,9 @@
+# Root gitignore
+MainScreen_recovered_*.kt
+.gradle/
+build/
+.idea/
+local.properties
+*.class
+*.apk
+*.dex
