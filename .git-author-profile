@@ -1,0 +1,21 @@
+# Git Author Profile & Developer Guidelines
+
+To prevent incorrect commit attributions, any AI agent or developer working on this workspace must configure Git credentials exactly as specified below before committing or pushing changes.
+
+## 👥 Git Credentials to Use
+* **Username**: `shotbyadii`
+* **Email**: `krshnaditya2@gmail.com`
+* **Repository**: `https://github.com/shotbyadii/glide-remote.git`
+
+## ⚙️ How to Configure Local Workspace
+Run the following commands at the root of the project:
+```bash
+git config user.name "shotbyadii"
+git config user.email "krshnaditya2@gmail.com"
+```
+
+## 🛠️ Verification Command
+To verify the configuration is correct, run:
+```bash
+git config --list --local
+```
